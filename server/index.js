@@ -7,6 +7,9 @@ import projectRoutes from "./routes/projects.js";
 import serviceRoutes from "./routes/services.js";
 import githubRoutes from "./routes/github.js";
 import aiRoutes from "./routes/ai.js";
+import logsRoutes from "./routes/logs.js";
+
+// ... imports
 
 dotenv.config();
 
@@ -34,6 +37,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/github", githubRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/logs", logsRoutes);
 
 // Health Check
 app.get("/api/health", (req, res) => {

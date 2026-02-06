@@ -94,9 +94,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       .catch((err) => console.error("Error fetching services:", err));
   };
 
+  // 4. Fetch Logs
+  const fetchLogs = () => {
+    fetch("/api/logs")
+      .then((res) => res.json())
+      .then((data) => setLogs(data))
+      .catch((err) => console.error("Error fetching logs:", err));
+  };
+
   useEffect(() => {
     fetchProjects();
     fetchServices();
+    fetchLogs();
   }, []);
 
   // 3. Poll System Stats (5s)
@@ -315,7 +324,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const addLog = (log: LogEntry) => {
-    setLogs((prev) => [log, ...prev].slice(0, 100));
+    // Optimistic update
+    const newLog = { ...log, timestamp: new Date() }; // Ensure date object for sorting if needed, though backend handles it
+    // But we want to send to backend
+    fetch("/api/logs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        level: log.level,
+        message: log.message,
+        source: log.source,
+      }),
+    })
+      .then((res) => res.json())
+      .then((savedLog) => {
+        setLogs((prev) => [savedLog, ...prev].slice(0, 100));
+      })
+      .catch((err) => console.error("Failed to save log", err));
   };
 
   return (
