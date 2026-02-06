@@ -6,6 +6,7 @@ import systemRoutes from "./routes/system.js";
 import projectRoutes from "./routes/projects.js";
 import serviceRoutes from "./routes/services.js";
 import githubRoutes from "./routes/github.js";
+import aiRoutes from "./routes/ai.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use("/api/system", systemRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/github", githubRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Health Check
 app.get("/api/health", (req, res) => {

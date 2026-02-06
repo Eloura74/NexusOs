@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface Service {
   id: string;
   name: string;
@@ -64,4 +66,11 @@ export interface SystemStats {
     count: number;
     containers: any[];
   };
+}
+
+export interface NavItem {
+  id: string;
+  label: string;
+  icon: any;
+  component: React.ReactNode;
 }

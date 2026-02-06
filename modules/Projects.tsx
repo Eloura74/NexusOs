@@ -4,7 +4,7 @@ import { Project } from "../types";
 import { GitBranch, Clock, ArrowRight, Folder, Plus, X } from "lucide-react";
 
 const Projects: React.FC = () => {
-  const { projects, addProject, syncGitHub } = useData();
+  const { projects, addProject, syncGitHub, analyzeProject } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProject, setNewProject] = useState<Partial<Project>>({
     name: "",
@@ -194,6 +194,44 @@ const Projects: React.FC = () => {
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none h-24 resize-none"
                   placeholder="Objectifs et notes..."
                 />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!newProject.name)
+                      return alert("Entrez un nom de projet d'abord");
+
+                    const btn = document.getElementById("ai-btn");
+                    if (btn) btn.innerText = "Analyse en cours...";
+
+                    const result = await analyzeProject(
+                      newProject.name,
+                      newProject.description || "",
+                      newProject.tags || [],
+                    );
+
+                    if (btn) btn.innerText = "✨ Analyser avec IA";
+
+                    if (result) {
+                      setNewProject((prev) => ({
+                        ...prev,
+                        progress: result.progress || prev.progress,
+                        description:
+                          (prev.description ? prev.description + "\n\n" : "") +
+                          "🤖 Analyse IA:\n" +
+                          result.analysis,
+                      }));
+                      if (result.suggestions) {
+                        alert(
+                          "Suggestions IA:\n" + result.suggestions.join("\n- "),
+                        );
+                      }
+                    }
+                  }}
+                  id="ai-btn"
+                  className="mt-2 text-xs flex items-center text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  <span className="mr-1">✨</span> Analyser avec IA (gpt-ss:20b)
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

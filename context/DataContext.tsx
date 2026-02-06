@@ -15,6 +15,11 @@ interface DataContextType {
   addProject: (project: Project) => void;
   syncGitHub: () => Promise<void>;
   checkServices: () => Promise<void>;
+  analyzeProject: (
+    name: string,
+    description: string,
+    tags: string[],
+  ) => Promise<any>;
   addLog: (log: LogEntry) => void;
 }
 
@@ -231,6 +236,41 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const analyzeProject = async (
+    name: string,
+    description: string,
+    tags: string[],
+  ) => {
+    try {
+      addLog({
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString(),
+        level: "INFO",
+        message: `Analyse AI en cours pour ${name}...`,
+        source: "AI",
+      });
+
+      const res = await fetch("/api/ai/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description, tags }),
+      });
+      const data = await res.json();
+
+      return data; // { progress, analysis, suggestions }
+    } catch (error) {
+      console.error("AI Analysis failed", error);
+      addLog({
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString(),
+        level: "ERROR",
+        message: "Échec de l'analyse AI.",
+        source: "AI",
+      });
+      return null;
+    }
+  };
+
   const addLog = (log: LogEntry) => {
     setLogs((prev) => [log, ...prev].slice(0, 100));
   };
@@ -250,6 +290,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         addProject,
         syncGitHub,
         checkServices,
+        analyzeProject,
         addLog,
       }}
     >

@@ -4,6 +4,7 @@ import Dashboard from "./modules/Dashboard";
 import Projects from "./modules/Projects";
 import Documentation from "./modules/Documentation";
 import { DataProvider } from "./context/DataContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import { NavItem } from "./types";
 import {
   LayoutDashboard,
@@ -75,7 +76,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <DataProvider>
-      <AppContent />
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
     </DataProvider>
   );
 };
