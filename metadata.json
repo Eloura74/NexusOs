@@ -1,0 +1,5 @@
+{
+  "name": "Nexus OS - Personal Ops Center",
+  "description": "A centralized, self-hosted control center for infrastructure, projects, and documentation. Designed as a modular OS for DevOps and Makers.",
+  "requestFramePermissions": []
+}
