@@ -122,7 +122,14 @@ const Projects: React.FC = () => {
                 </div>
               </div>
 
-              <button className="w-full mt-2 py-2 flex items-center justify-center text-sm font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-all group-hover:shadow-md border border-transparent hover:border-slate-700">
+              <button
+                onClick={() =>
+                  project.repoUrl
+                    ? window.open(project.repoUrl, "_blank")
+                    : alert("Aucune URL configurée pour ce projet")
+                }
+                className="w-full mt-2 py-2 flex items-center justify-center text-sm font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-all group-hover:shadow-md border border-transparent hover:border-slate-700"
+              >
                 Ouvrir l'Espace{" "}
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </button>
