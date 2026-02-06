@@ -1,6 +1,13 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { Service, Project, DocEntry, LogEntry, SystemStats } from "../types";
 import { MOCK_DOCS, MOCK_LOGS } from "../constants";
+import { useNotification } from "./NotificationContext";
 
 interface DataContextType {
   services: Service[];
@@ -42,6 +49,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [logs, setLogs] = useState<LogEntry[]>(MOCK_LOGS);
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { showNotification } = useNotification();
+  const prevServicesRef = useRef<Service[]>([]); // To track changes
 
   // 1. Fetch Projects
   const fetchProjects = () => {
@@ -158,6 +168,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         lastCheck: new Date(s.lastCheck).toLocaleTimeString(),
         responseTime: s.responseTime,
       }));
+
+      // Check for status changes
+      mappedServices.forEach((newSvc: Service) => {
+        const oldSvc = prevServicesRef.current.find((s) => s.id === newSvc.id);
+        if (oldSvc && oldSvc.status !== newSvc.status) {
+          // Status Changed Notification
+          const isUp = newSvc.status === "ONLINE";
+
+          // Specific rule for Home Assistant & Critical infra
+          if (
+            ["HOME_ASSISTANT", "PRINTER", "NAS", "SERVER"].includes(newSvc.type)
+          ) {
+            showNotification(
+              isUp ? "success" : "error",
+              `État Service : ${newSvc.name}`,
+              `${newSvc.name} est maintenant ${newSvc.status} (${newSvc.responseTime || 0}ms)`,
+            );
+          }
+        }
+      });
+
+      prevServicesRef.current = mappedServices;
       setServices(mappedServices);
 
       addLog({
@@ -167,8 +199,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         message: "Scan des services terminé.",
         source: "System",
       });
+
+      showNotification(
+        "success",
+        "Scan Terminé",
+        "Tous les services ont été écourtés.",
+      );
     } catch (error) {
       console.error("Scan failed", error);
+      showNotification(
+        "error",
+        "Erreur Scan",
+        "Impossible de scanner les services.",
+      );
     }
   };
 

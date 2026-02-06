@@ -75,11 +75,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <DataProvider>
-      <NotificationProvider>
+    <NotificationProvider>
+      <DataProvider>
         <AppContent />
-      </NotificationProvider>
-    </DataProvider>
+      </DataProvider>
+    </NotificationProvider>
   );
 };
 

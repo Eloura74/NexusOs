@@ -2,6 +2,7 @@ import React from "react";
 import { NavItem } from "../types";
 import { Menu, X, Shield, Search, Bell, Command } from "lucide-react";
 import { useData } from "../context/DataContext";
+import ChatWidget from "./ChatWidget";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -136,6 +137,7 @@ const Layout: React.FC<LayoutProps> = ({
           <div className="max-w-7xl mx-auto w-full">{children}</div>
         </main>
       </div>
+      <ChatWidget />
     </div>
   );
 };

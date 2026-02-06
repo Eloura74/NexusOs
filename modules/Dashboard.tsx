@@ -157,43 +157,55 @@ const Dashboard: React.FC = () => {
         <div className="space-y-6">
           {/* Graphique de Charge Système */}
           <div className="bg-surface border border-surface-highlight rounded-xl p-5 shadow-lg">
-            <h3 className="text-slate-100 font-medium mb-4 flex items-center text-sm">
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
               <Activity className="w-4 h-4 mr-2 text-primary" />
               Charge Système (15m)
             </h3>
             <div className="h-[200px] w-full min-w-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={CHART_DATA}>
-                  <defs>
-                    <linearGradient id="colorLoad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#334155"
-                    vertical={false}
-                  />
-                  <XAxis dataKey="time" hide />
-                  <YAxis hide domain={[0, 100]} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1e293b",
-                      borderColor: "#334155",
-                      color: "#fff",
-                    }}
-                    itemStyle={{ color: "#3b82f6" }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="load"
-                    stroke="#3b82f6"
-                    fillOpacity={1}
-                    fill="url(#colorLoad)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {/* Attendre que les données soient chargées pour éviter le warning Recharts */}
+              {systemStats ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={CHART_DATA}>
+                    <defs>
+                      <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="#3B82F6"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#3B82F6"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <XAxis dataKey="time" hide />
+                    <YAxis hide domain={[0, 100]} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "1px solid #1e293b",
+                        borderRadius: "8px",
+                      }}
+                      itemStyle={{ color: "#e2e8f0" }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="load"
+                      stroke="#3B82F6"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorCpu)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-slate-500 text-xs">
+                  Chargement des métriques...
+                </div>
+              )}
             </div>
           </div>
 

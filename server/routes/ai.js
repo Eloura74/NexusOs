@@ -32,7 +32,7 @@ router.post("/analyze", async (req, res) => {
 
   try {
     const response = await axios.post(`${OLLAMA_HOST}/api/generate`, {
-      model: "mistral", // Ou "llama3", à configurer par le user
+      model: "gpt-oss:20b",
       prompt: prompt,
       stream: false,
       format: "json",
@@ -59,14 +59,22 @@ router.post("/chat", async (req, res) => {
 
   try {
     const response = await axios.post(`${OLLAMA_HOST}/api/generate`, {
-      model: "mistral",
+      model: "gpt-oss:20b",
       prompt: message,
       stream: false,
     });
 
     res.json({ response: response.data.response });
   } catch (error) {
-    res.status(500).json({ message: "Ollama offline" });
+    console.error("AI Chat Error:", error.message);
+    if (error.response) {
+      console.error("Ollama Response Data:", error.response.data);
+      console.error("Ollama Response Status:", error.response.status);
+    }
+    res.status(500).json({
+      message: "Ollama offline or error",
+      details: error.message,
+    });
   }
 });
 
