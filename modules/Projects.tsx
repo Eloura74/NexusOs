@@ -1,11 +1,23 @@
 import React, { useState } from "react";
 import { useData } from "../context/DataContext";
 import { Project } from "../types";
-import { GitBranch, Clock, ArrowRight, Folder, Plus, X } from "lucide-react";
+import {
+  GitBranch,
+  Clock,
+  ArrowRight,
+  Folder,
+  Plus,
+  X,
+  RefreshCw,
+  Star,
+  GitFork,
+  Code,
+} from "lucide-react";
 
 const Projects: React.FC = () => {
   const { projects, addProject, syncGitHub, analyzeProject } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [newProject, setNewProject] = useState<Partial<Project>>({
     name: "",
     description: "",
@@ -14,7 +26,14 @@ const Projects: React.FC = () => {
     tags: [],
   });
 
+  const handleSync = async () => {
+    setIsSyncing(true);
+    await syncGitHub();
+    setIsSyncing(false);
+  };
+
   const handleCreateProject = () => {
+    // ... existing logic ...
     if (!newProject.name) return;
 
     addProject({
@@ -49,11 +68,14 @@ const Projects: React.FC = () => {
         </div>
         <div className="flex space-x-3">
           <button
-            onClick={syncGitHub}
-            className="btn-secondary flex items-center"
+            onClick={handleSync}
+            disabled={isSyncing}
+            className={`btn-secondary flex items-center ${isSyncing ? "opacity-70 cursor-not-allowed" : ""}`}
           >
-            <GitBranch className="w-4 h-4 mr-2" />
-            Sync GitHub
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${isSyncing ? "animate-spin" : ""}`}
+            />
+            {isSyncing ? "Sync..." : "Sync GitHub"}
           </button>
           <button onClick={() => setIsModalOpen(true)} className="btn-primary">
             <Plus className="w-4 h-4 mr-2" />
@@ -91,9 +113,29 @@ const Projects: React.FC = () => {
             <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-primary transition-colors">
               {project.name}
             </h3>
-            <p className="text-sm text-slate-400 mb-6 flex-1 leading-relaxed">
+            <p className="text-sm text-slate-400 mb-6 flex-1 leading-relaxed line-clamp-3">
               {project.description}
             </p>
+
+            {/* GitHub Stats */}
+            <div className="flex items-center space-x-4 mb-4 text-xs text-slate-500">
+              {project.language && (
+                <div className="flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1.5"></span>
+                  {project.language}
+                </div>
+              )}
+              {(project.stars > 0 || project.forks > 0) && (
+                <>
+                  <div className="flex items-center" title="Stars">
+                    <Star className="w-3 h-3 mr-1" /> {project.stars}
+                  </div>
+                  <div className="flex items-center" title="Forks">
+                    <GitFork className="w-3 h-3 mr-1" /> {project.forks}
+                  </div>
+                </>
+              )}
+            </div>
 
             <div className="space-y-4">
               <div>
@@ -111,14 +153,17 @@ const Projects: React.FC = () => {
 
               <div className="flex items-center space-x-4 text-xs text-slate-500 font-mono border-t border-surface-highlight pt-4">
                 {project.repoUrl && (
-                  <div className="flex items-center hover:text-white cursor-pointer transition-colors px-2 py-1 -ml-2 rounded hover:bg-slate-800">
+                  <div
+                    className="flex items-center hover:text-white cursor-pointer transition-colors px-2 py-1 -ml-2 rounded hover:bg-slate-800"
+                    onClick={() => window.open(project.repoUrl, "_blank")}
+                  >
                     <GitBranch className="w-3 h-3 mr-1.5" />
                     repo
                   </div>
                 )}
                 <div className="flex items-center ml-auto">
                   <Clock className="w-3 h-3 mr-1.5" />
-                  {project.lastUpdate}
+                  {new Date(project.lastUpdate).toLocaleDateString()}
                 </div>
               </div>
 
@@ -149,8 +194,9 @@ const Projects: React.FC = () => {
         </button>
       </div>
 
-      {/* Modal Creation Projet */}
       {isModalOpen && (
+        // ... Modal content code (keeping it cleaner in this thought, but will replace full content) ...
+        // Actually, I will just return the full file content to be safe and avoid "..."
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-surface border border-surface-highlight rounded-xl w-full max-w-md p-6 shadow-2xl animate-fade-in">
             <div className="flex justify-between items-center mb-6">
@@ -204,7 +250,7 @@ const Projects: React.FC = () => {
                     if (btn) btn.innerText = "Analyse en cours...";
 
                     const result = await analyzeProject(
-                      newProject.name,
+                      newProject.name!,
                       newProject.description || "",
                       newProject.tags || [],
                     );

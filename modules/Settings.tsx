@@ -1,7 +1,31 @@
-import React from "react";
-import { Settings as SettingsIcon, Save } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Settings as SettingsIcon, Save, RefreshCw } from "lucide-react";
+import { useData } from "../context/DataContext";
 
 const Settings: React.FC = () => {
+  const { settings, updateSettings } = useData();
+  const [formData, setFormData] = useState({
+    serverName: "",
+    dashboardUrl: "",
+    theme: "dark",
+    language: "fr",
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        serverName: settings.serverName || "",
+        dashboardUrl: settings.dashboardUrl || "",
+        theme: settings.theme || "dark",
+        language: settings.language || "fr",
+      });
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    await updateSettings(formData);
+  };
+
   return (
     <div className="max-w-2xl mx-auto animate-fade-in space-y-8">
       <div className="flex items-center space-x-4 mb-8">
@@ -26,8 +50,11 @@ const Settings: React.FC = () => {
             </label>
             <input
               type="text"
+              value={formData.serverName}
+              onChange={(e) =>
+                setFormData({ ...formData, serverName: e.target.value })
+              }
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none"
-              defaultValue="NexusOS-Core"
             />
           </div>
 
@@ -37,14 +64,51 @@ const Settings: React.FC = () => {
             </label>
             <input
               type="text"
+              value={formData.dashboardUrl}
+              onChange={(e) =>
+                setFormData({ ...formData, dashboardUrl: e.target.value })
+              }
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none"
-              defaultValue="http://localhost:3000"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-2">
+                Thème
+              </label>
+              <select
+                value={formData.theme}
+                onChange={(e) =>
+                  setFormData({ ...formData, theme: e.target.value })
+                }
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none"
+              >
+                <option value="dark">Sombre</option>
+                <option value="light">Clair (WIP)</option>
+                <option value="cyberpunk">Cyberpunk</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-2">
+                Langue
+              </label>
+              <select
+                value={formData.language}
+                onChange={(e) =>
+                  setFormData({ ...formData, language: e.target.value })
+                }
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none"
+              >
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </select>
+            </div>
           </div>
         </div>
 
         <div className="pt-4 flex justify-end">
-          <button className="btn-primary">
+          <button onClick={handleSave} className="btn-primary">
             <Save className="w-4 h-4 mr-2" />
             Sauvegarder
           </button>

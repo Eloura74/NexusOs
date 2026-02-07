@@ -12,6 +12,9 @@ const ProjectSchema = new mongoose.Schema(
     progress: { type: Number, default: 0, min: 0, max: 100 },
     tags: [String],
     repoUrl: String,
+    stars: { type: Number, default: 0 },
+    forks: { type: Number, default: 0 },
+    language: String,
     githubStats: {
       stars: Number,
       forks: Number,
@@ -21,7 +24,7 @@ const ProjectSchema = new mongoose.Schema(
     lastUpdate: { type: Date, default: Date.now },
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt automatically
+    timestamps: true,
   },
 );
 

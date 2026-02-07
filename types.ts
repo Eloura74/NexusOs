@@ -18,13 +18,11 @@ export interface Project {
   status: "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED";
   progress: number;
   tags: string[];
-  repoUrl?: string;
+  repoUrl?: string; // Optional link to GitHub
   lastUpdate: string;
-  githubStats?: {
-    stars: number;
-    forks: number;
-    issues: number;
-  };
+  stars?: number;
+  forks?: number;
+  language?: string;
 }
 
 export interface DocEntry {
@@ -73,4 +71,11 @@ export interface NavItem {
   label: string;
   icon: any;
   component: React.ReactNode;
+}
+
+export interface Settings {
+  serverName: string;
+  dashboardUrl: string;
+  theme: string;
+  language: string;
 }

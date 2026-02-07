@@ -4,23 +4,31 @@ import ServiceCard from "../components/ServiceCard";
 import Modal from "../components/Modal";
 import {
   Activity,
-  AlertCircle,
-  Cpu,
-  Server,
-  CheckCircle,
-  ArrowRight,
   HardDrive,
+  Cpu,
+  GitGraph,
+  Clock,
+  Server,
+  Terminal,
+  Trash2,
+  RefreshCw,
+  Github,
+  AlertCircle,
+  ArrowRight,
   Box,
   Plus,
 } from "lucide-react";
+import TaskRunnerModal from "../components/TaskRunnerModal";
 import {
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  AreaChart, // Keeping this if needed, but we switched to LineChart
+  Area,
 } from "recharts";
 
 // Données mock pour le graphique de charge (on pourra dynamiser plus tard avec l'historique)
@@ -43,6 +51,15 @@ const Dashboard: React.FC = () => {
     url: "http://",
     icon: "Box", // Default icon
   });
+
+  // Task Runner State
+  const [isRunnerOpen, setIsRunnerOpen] = useState(false);
+  const [currentTask, setCurrentTask] = useState({ command: "", title: "" });
+
+  const runTask = (title: string, command: string) => {
+    setCurrentTask({ title, command });
+    setIsRunnerOpen(true);
+  };
 
   const criticalServices = services.filter(
     (s) => s.status === "OFFLINE" || s.status === "UNKNOWN",
@@ -70,7 +87,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-20">
       {/* Statistiques d'en-tête (Données Réelles) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Services Totaux / OS Info */}
@@ -139,9 +156,9 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Division du Contenu Principal : Services & Contexte */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Colonne Gauche : État des Services */}
-        <div className="xl:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-white flex items-center">
               <Activity className="w-5 h-5 mr-2 text-primary" />
@@ -213,7 +230,7 @@ const Dashboard: React.FC = () => {
               {/* Attendre que les données soient chargées pour éviter le warning Recharts */}
               {systemStats ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={CHART_DATA}>
+                  <LineChart data={CHART_DATA}>
                     <defs>
                       <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
                         <stop
@@ -239,7 +256,7 @@ const Dashboard: React.FC = () => {
                       }}
                       itemStyle={{ color: "#e2e8f0" }}
                     />
-                    <Area
+                    <Line
                       type="monotone"
                       dataKey="load"
                       stroke="#3B82F6"
@@ -247,13 +264,69 @@ const Dashboard: React.FC = () => {
                       fillOpacity={1}
                       fill="url(#colorCpu)"
                     />
-                  </AreaChart>
+                  </LineChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full w-full flex items-center justify-center text-slate-500 text-xs">
                   Chargement des métriques...
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-surface border border-surface-highlight rounded-xl p-5 shadow-lg">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center">
+              <Terminal className="w-5 h-5 mr-2 text-primary" />
+              Actions Rapides
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => runTask("Git Pull", "git pull")}
+                className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all group border border-slate-700 hover:border-primary/50"
+              >
+                <Github className="w-6 h-6 text-white mb-2 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-slate-300">
+                  Git Pull
+                </span>
+              </button>
+
+              <button
+                onClick={() => runTask("NPM Install", "npm install")}
+                className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all group border border-slate-700 hover:border-red-500/50"
+              >
+                <HardDrive className="w-6 h-6 text-red-400 mb-2 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-slate-300">
+                  NPM Install
+                </span>
+              </button>
+
+              <button
+                onClick={() =>
+                  runTask(
+                    "Nettoyage Logs",
+                    "echo 'Cleaning logs...' && timeout 2",
+                  )
+                }
+                className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all group border border-slate-700 hover:border-amber-500/50"
+              >
+                <Trash2 className="w-6 h-6 text-amber-400 mb-2 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-slate-300">
+                  Clean Logs
+                </span>
+              </button>
+
+              <button
+                onClick={() =>
+                  runTask("Restart Server", "echo 'Restarting...' && timeout 2")
+                }
+                className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all group border border-slate-700 hover:border-green-500/50"
+              >
+                <RefreshCw className="w-6 h-6 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-slate-300">
+                  Restart
+                </span>
+              </button>
             </div>
           </div>
 
@@ -268,9 +341,9 @@ const Dashboard: React.FC = () => {
               </span>
             </div>
             <div className="divide-y divide-slate-800">
-              {logs.slice(0, 5).map((log) => (
+              {logs.slice(0, 5).map((log, index) => (
                 <div
-                  key={log.id}
+                  key={log.id || index}
                   className="p-3 text-sm hover:bg-slate-800/50 transition-colors group cursor-default"
                 >
                   <div className="flex justify-between items-center mb-1">
@@ -399,6 +472,13 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
       </Modal>
+
+      <TaskRunnerModal
+        isOpen={isRunnerOpen}
+        onClose={() => setIsRunnerOpen(false)}
+        title={currentTask.title}
+        command={currentTask.command}
+      />
     </div>
   );
 };

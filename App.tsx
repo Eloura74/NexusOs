@@ -3,6 +3,8 @@ import Layout from "./components/Layout";
 import Dashboard from "./modules/Dashboard";
 import Projects from "./modules/Projects";
 import Documentation from "./modules/Documentation";
+import SettingsModule from "./modules/Settings";
+import TerminalModule from "./modules/Terminal";
 import { DataProvider } from "./context/DataContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { NavItem } from "./types";
@@ -49,13 +51,13 @@ const AppContent: React.FC = () => {
       id: "terminal",
       label: "Terminal Web",
       icon: Terminal,
-      component: <PlaceholderModule title="Terminal Web" />,
+      component: <TerminalModule />,
     },
     {
       id: "settings",
       label: "Système",
       icon: Settings,
-      component: <PlaceholderModule title="Paramètres Système" />,
+      component: <SettingsModule />,
     },
   ];
 

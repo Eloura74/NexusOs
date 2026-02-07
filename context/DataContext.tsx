@@ -28,6 +28,11 @@ interface DataContextType {
     tags: string[],
   ) => Promise<any>;
   addLog: (log: LogEntry) => void;
+  addDoc: (doc: DocEntry) => void;
+  updateDoc: (doc: DocEntry) => void;
+  deleteDoc: (id: string) => void;
+  settings: any;
+  updateSettings: (newSettings: any) => Promise<boolean>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -50,8 +55,42 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Settings State
+  const [settings, setSettings] = useState<any>({
+    serverName: "NexusOS-Core",
+    dashboardUrl: "http://localhost:3000",
+  });
+
   const { showNotification } = useNotification();
   const prevServicesRef = useRef<Service[]>([]); // To track changes
+
+  // Settings Actions
+  const fetchSettings = () => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data) setSettings(data);
+      })
+      .catch((err) => console.error("Error fetching settings:", err));
+  };
+
+  const updateSettings = async (newSettings: any) => {
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newSettings),
+      });
+      const data = await res.json();
+      setSettings(data);
+      showNotification("success", "Paramètres", "Configuration sauvegardée !");
+      return true;
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      showNotification("error", "Erreur", "Impossible de sauvegarder.");
+      return false;
+    }
+  };
 
   // 1. Fetch Projects
   const fetchProjects = () => {
@@ -67,7 +106,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
           tags: p.tags,
           repoUrl: p.repoUrl,
           lastUpdate: new Date(p.lastUpdate).toLocaleDateString(),
-          githubStats: p.githubStats,
+          stars: p.stars,
+          forks: p.forks,
+          language: p.language,
         }));
         setProjects(mappedProjects);
       })
@@ -102,10 +143,53 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       .catch((err) => console.error("Error fetching logs:", err));
   };
 
+  // Doc Actions
+  const fetchDocs = () => {
+    fetch("/api/docs")
+      .then((res) => res.json())
+      .then((data) => setDocs(data))
+      .catch((err) => console.error("Error fetching docs:", err));
+  };
+
+  const addDoc = (doc: DocEntry) => {
+    fetch("/api/docs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(doc),
+    })
+      .then((res) => res.json())
+      .then((savedDoc) => {
+        setDocs((prev) => [...prev, savedDoc]);
+        showNotification("success", "Doc", "Document créé.");
+      });
+  };
+
+  const updateDoc = (doc: DocEntry) => {
+    fetch(`/api/docs/${doc.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(doc),
+    })
+      .then((res) => res.json())
+      .then((updatedDoc) => {
+        setDocs((prev) => prev.map((d) => (d.id === doc.id ? updatedDoc : d)));
+        showNotification("success", "Doc", "Document mis à jour.");
+      });
+  };
+
+  const deleteDoc = (id: string) => {
+    fetch(`/api/docs/${id}`, { method: "DELETE" }).then(() => {
+      setDocs((prev) => prev.filter((d) => d.id !== id));
+      showNotification("info", "Doc", "Document supprimé.");
+    });
+  };
+
   useEffect(() => {
     fetchProjects();
     fetchServices();
     fetchLogs();
+    fetchDocs();
+    fetchSettings();
   }, []);
 
   // 3. Poll System Stats (5s)
@@ -121,7 +205,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Actions
   // Actions
   const addService = (service: Service) => {
     fetch("/api/services", {
@@ -143,7 +226,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         ]);
 
         addLog({
-          id: Date.now().toString(),
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
           timestamp: new Date().toLocaleTimeString(),
           level: "SUCCESS",
           message: `Service ajouté : ${service.name}`,
@@ -237,7 +320,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       setServices(mappedServices);
 
       addLog({
-        id: Date.now().toString(),
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
         level: "SUCCESS",
         message: "Scan des services terminé.",
@@ -261,63 +344,45 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const syncGitHub = async () => {
     try {
-      addLog({
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-        level: "INFO",
-        message: "Synchronisation GitHub en cours...",
-        source: "GitHub",
-      });
+      showNotification(
+        "info",
+        "Synchronisation GitHub",
+        "Récupération des dépôts...",
+      );
 
-      const res = await fetch("/api/github/repos");
-      const repos = await res.json();
+      const res = await fetch("/api/github/sync", { method: "POST" });
+      const data = await res.json();
 
-      // Pour chaque repo, on essaie de l'ajouter s'il n'existe pas
-      // Note: Idéalement, le backend devrait gérer le "sync/upsert" globalement
-      // Pour l'instant on fait simple côté front ou on pourrait avoir une route /api/projects/sync-github
+      if (res.ok) {
+        showNotification(
+          "success",
+          "Synchronisation Terminée",
+          `Ajoutés: ${data.stats.added}, Mis à jour: ${data.stats.updated}`,
+        );
+        fetchProjects();
 
-      // Ici on va juste recharger les projets si le backend avait une logique de sync,
-      // mais le backend github route renvoie juste les repos.
-      // On va les ajouter en mémoire ou DB ?
-      // Le mieux est de les proposer à l'import ou de les auto-ajouter.
-      // Pour cet exercice, on va auto-créer ceux qui manquent (simple check par nom)
-
-      let addedCount = 0;
-      for (const repo of repos) {
-        const exists = projects.find((p) => p.name === repo.name);
-        if (!exists) {
-          await fetch("/api/projects", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: repo.name,
-              description: repo.description,
-              status: "ACTIVE", // Default
-              progress: 0,
-              tags: [repo.language || "Code"],
-              repoUrl: repo.html_url,
-            }),
-          });
-          addedCount++;
-        }
+        addLog({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          timestamp: new Date().toLocaleTimeString(),
+          level: "SUCCESS",
+          message: `Sync GitHub : ${data.stats.added} ajoutés, ${data.stats.updated} mis à jour.`,
+          source: "GitHub",
+        });
+      } else {
+        throw new Error(data.message);
       }
-
-      fetchProjects(); // Reload final list
-
+    } catch (error: any) {
+      console.error("GitHub Sync Error:", error);
+      showNotification(
+        "error",
+        "Erreur Sync",
+        "Impossible de synchroniser avec GitHub.",
+      );
       addLog({
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-        level: "SUCCESS",
-        message: `Sync GitHub terminée : ${addedCount} nouveaux projets importés.`,
-        source: "GitHub",
-      });
-    } catch (error) {
-      console.error("GitHub Sync failed", error);
-      addLog({
-        id: Date.now().toString(),
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
         level: "ERROR",
-        message: "Échec de la synchronisation GitHub.",
+        message: `Erreur Sync GitHub : ${error.message || "Erreur inconnue"}`,
         source: "GitHub",
       });
     }
@@ -360,7 +425,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const addLog = (log: LogEntry) => {
     // Optimistic update
-    const newLog = { ...log, timestamp: new Date() }; // Ensure date object for sorting if needed, though backend handles it
+    const newLog = {
+      ...log,
+      timestamp: new Date(),
+      id: log.id || Date.now().toString(),
+    };
+
     // But we want to send to backend
     fetch("/api/logs", {
       method: "POST",
@@ -395,6 +465,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         checkServices,
         analyzeProject,
         addLog,
+        addDoc,
+        updateDoc,
+        deleteDoc,
+        settings,
+        updateSettings,
       }}
     >
       {children}
