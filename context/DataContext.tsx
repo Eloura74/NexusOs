@@ -388,11 +388,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       setLogs(logsRes.data);
     } catch (error) {
       console.error("Scan failed", error);
-      showNotification(
-        "error",
-        "Erreur Scan",
-        "Impossible de scanner les services.",
-      );
+      // Suppress toast to avoid spam when backend is down
+      // showNotification(
+      //   "error",
+      //   "Erreur Scan",
+      //   "Impossible de scanner les services.",
+      // );
     }
   };
 
