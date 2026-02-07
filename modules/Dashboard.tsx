@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { useData } from "../context/DataContext";
 import ServiceCard from "../components/ServiceCard";
+import Modal from "../components/Modal";
 import {
   Activity,
   AlertCircle,
@@ -10,6 +11,7 @@ import {
   ArrowRight,
   HardDrive,
   Box,
+  Plus,
 } from "lucide-react";
 import {
   AreaChart,
@@ -33,7 +35,14 @@ const CHART_DATA = [
 ];
 
 const Dashboard: React.FC = () => {
-  const { services, logs, systemStats, checkServices } = useData();
+  const { services, logs, systemStats, checkServices, addService } = useData();
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [newService, setNewService] = useState({
+    name: "",
+    type: "OTHER",
+    url: "http://",
+    icon: "Box", // Default icon
+  });
 
   const criticalServices = services.filter(
     (s) => s.status === "OFFLINE" || s.status === "UNKNOWN",
@@ -41,6 +50,24 @@ const Dashboard: React.FC = () => {
   const healthyServices = services.filter(
     (s) => s.status === "ONLINE" || s.status === "MAINTENANCE",
   );
+
+  const handleAddService = () => {
+    if (!newService.name || !newService.url) return;
+
+    addService({
+      id: Date.now().toString(), // Temp ID
+      name: newService.name,
+      type: newService.type,
+      url: newService.url,
+      icon: newService.icon,
+      status: "UNKNOWN",
+      lastCheck: "Jamais",
+      responseTime: 0,
+    } as any);
+
+    setIsServiceModalOpen(false);
+    setNewService({ name: "", type: "OTHER", url: "http://", icon: "Box" });
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -113,44 +140,65 @@ const Dashboard: React.FC = () => {
 
       {/* Division du Contenu Principal : Services & Contexte */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* Colonne Gauche : Grille de Services */}
+        {/* Colonne Gauche : État des Services */}
         <div className="xl:col-span-2 space-y-6">
-          {criticalServices.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-sm font-bold text-red-400 uppercase tracking-widest flex items-center">
-                <AlertCircle className="w-4 h-4 mr-2" /> Attention Requise
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {criticalServices.map((service) => (
-                  <ServiceCard key={service.id} service={service} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center">
-                <CheckCircle className="w-4 h-4 mr-2 text-green-500/50" />{" "}
-                Services Monitorés
-              </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white flex items-center">
+              <Activity className="w-5 h-5 mr-2 text-primary" />
+              État des Services
+            </h2>
+            <div className="flex space-x-3">
               <button
                 onClick={() => checkServices()}
-                className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded transition-colors flex items-center"
+                className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors flex items-center"
                 title="Scanner les services maintenant"
               >
-                <Activity className="w-3 h-3 mr-1" /> Scan
+                <Activity className="w-3 h-3 mr-1.5" /> Scan
+              </button>
+              <button
+                onClick={() => setIsServiceModalOpen(true)}
+                className="text-xs bg-primary hover:bg-primary-hover text-white px-3 py-1.5 rounded-lg border border-primary-highlight transition-colors flex items-center shadow-lg shadow-primary/20"
+              >
+                <Plus className="w-3 h-3 mr-1.5" />
+                Ajouter
               </button>
             </div>
-            <span className="text-xs text-slate-600 bg-slate-900 px-2 py-1 rounded font-mono">
-              {healthyServices.length}/{services.length} OK
-            </span>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Services Critiques / Offline */}
+            {criticalServices.length > 0 && (
+              <div className="col-span-1 md:col-span-2 bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                <h3 className="text-red-400 font-bold mb-3 flex items-center text-sm uppercase tracking-wider">
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Attention Requise ({criticalServices.length})
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {criticalServices.map((service) => (
+                    <ServiceCard key={service.id} service={service} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Services Online */}
             {healthyServices.map((service) => (
               <ServiceCard key={service.id} service={service} />
             ))}
           </div>
+
+          {services.length === 0 && (
+            <div className="text-center py-12 border-2 border-dashed border-slate-800 rounded-xl">
+              <Box className="w-12 h-12 text-slate-700 mx-auto mb-3" />
+              <p className="text-slate-500">Aucun service configuré.</p>
+              <button
+                onClick={() => setIsServiceModalOpen(true)}
+                className="text-primary hover:underline text-sm mt-2"
+              >
+                Ajouter votre premier service
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Colonne Droite : Widgets */}
@@ -264,6 +312,93 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Service Modal */}
+      <Modal
+        isOpen={isServiceModalOpen}
+        onClose={() => setIsServiceModalOpen(false)}
+        title="Ajouter un Service"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              Nom du Service
+            </label>
+            <input
+              type="text"
+              value={newService.name}
+              onChange={(e) =>
+                setNewService({ ...newService, name: e.target.value })
+              }
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
+              placeholder="ex: Home Assistant"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1">
+                Type
+              </label>
+              <select
+                value={newService.type}
+                onChange={(e) =>
+                  setNewService({ ...newService, type: e.target.value })
+                }
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
+              >
+                <option value="OTHER">Autre</option>
+                <option value="HOME_ASSISTANT">Home Assistant</option>
+                <option value="PRINTER">Imprimante 3D</option>
+                <option value="NAS">NAS / Stockage</option>
+                <option value="SERVER">Serveur / VM</option>
+                <option value="NETWORK">Réseau</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1">
+                Icône
+              </label>
+              <select
+                value={newService.icon}
+                onChange={(e) =>
+                  setNewService({ ...newService, icon: e.target.value })
+                }
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
+              >
+                <option value="Box">Box (Défaut)</option>
+                <option value="Server">Serveur</option>
+                <option value="Activity">Activité</option>
+                <option value="Cpu">CPU</option>
+                <option value="HardDrive">Disque</option>
+                <option value="Wifi">Wifi</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              URL (avec http://)
+            </label>
+            <input
+              type="text"
+              value={newService.url}
+              onChange={(e) =>
+                setNewService({ ...newService, url: e.target.value })
+              }
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
+              placeholder="http://192.168.1.x:8123"
+            />
+          </div>
+
+          <button
+            onClick={handleAddService}
+            className="w-full btn-primary justify-center mt-6"
+          >
+            Ajouter
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

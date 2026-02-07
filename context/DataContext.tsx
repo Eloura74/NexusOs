@@ -122,9 +122,44 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   // Actions
+  // Actions
   const addService = (service: Service) => {
-    // TODO: Implement POST /api/services if management UI added
-    setServices((prev) => [...prev, service]);
+    fetch("/api/services", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(service),
+    })
+      .then((res) => res.json())
+      .then((savedService) => {
+        // Use the saved service from backend to get the real ID
+        setServices((prev) => [
+          ...prev,
+          {
+            ...savedService,
+            id: savedService._id, // Ensure ID mapping if needed, backend sends _id
+            lastCheck: "Jamais",
+            status: "UNKNOWN",
+          },
+        ]);
+
+        addLog({
+          id: Date.now().toString(),
+          timestamp: new Date().toLocaleTimeString(),
+          level: "SUCCESS",
+          message: `Service ajouté : ${service.name}`,
+          source: "System",
+        });
+
+        showNotification(
+          "success",
+          "Service Ajouté",
+          `${service.name} est maintenant surveillé.`,
+        );
+      })
+      .catch((err) => {
+        console.error("Error adding service:", err);
+        showNotification("error", "Erreur", "Impossible d'ajouter le service.");
+      });
   };
 
   const updateServiceStatus = (id: string, status: Service["status"]) => {

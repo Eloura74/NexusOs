@@ -8,6 +8,7 @@ import serviceRoutes from "./routes/services.js";
 import githubRoutes from "./routes/github.js";
 import aiRoutes from "./routes/ai.js";
 import logsRoutes from "./routes/logs.js";
+import docsRoutes from "./routes/docs.js";
 
 // ... imports
 
@@ -38,6 +39,7 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/github", githubRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/logs", logsRoutes);
+app.use("/api/docs", docsRoutes);
 
 // Health Check
 app.get("/api/health", (req, res) => {
