@@ -5,11 +5,14 @@ const ServiceSchema = new mongoose.Schema(
     name: { type: String, required: true },
     type: {
       type: String,
-      enum: ["PRINTER", "NAS", "HOME_ASSISTANT", "SERVER", "OTHER"],
+      enum: ["PRINTER", "NAS", "HOME_ASSISTANT", "SERVER", "OTHER", "KLIPPER"],
       default: "OTHER",
     },
+    apiKey: String, // Optional Moonraker API Key
     url: { type: String, required: true },
     icon: String, // Nom de l'icône Lucide ou URL
+    description: String,
+    tags: [String],
     status: {
       type: String,
       enum: ["ONLINE", "OFFLINE", "MAINTENANCE", "UNKNOWN"],

@@ -11,6 +11,7 @@ import logsRoutes from "./routes/logs.js";
 import docsRoutes from "./routes/docs.js";
 import settingsRoutes from "./routes/settings.js";
 import commandsRoutes from "./routes/commands.js";
+import moonrakerRoutes from "./routes/moonraker.js";
 
 // ... imports
 
@@ -63,6 +64,7 @@ app.use("/api/logs", logsRoutes);
 app.use("/api/docs", docsRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/commands", commandsRoutes);
+app.use("/api/moonraker", moonrakerRoutes);
 
 // Health Check
 app.get("/api/health", (req, res) => {

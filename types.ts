@@ -3,9 +3,12 @@ import React from "react";
 export interface Service {
   id: string;
   name: string;
-  type: "PRINTER" | "NAS" | "HOME_ASSISTANT" | "SERVER" | "OTHER";
+  type: "PRINTER" | "NAS" | "HOME_ASSISTANT" | "SERVER" | "OTHER" | "KLIPPER";
   url: string;
   icon?: string;
+  apiKey?: string;
+  description?: string;
+  tags?: string[];
   status: "ONLINE" | "OFFLINE" | "MAINTENANCE" | "UNKNOWN";
   lastCheck: string;
   responseTime?: number;

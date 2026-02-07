@@ -23,6 +23,8 @@ interface DataContextType {
   docs: DocEntry[];
   logs: LogEntry[];
   commands: Command[];
+  addCommand: (command: any) => void;
+  deleteCommand: (id: string) => void;
   systemStats: SystemStats | null;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -149,7 +151,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (statsRes.status === "fulfilled") setSystemStats(statsRes.value.data);
 
-      if (servicesRes.status === "fulfilled") {
+      if (
+        servicesRes.status === "fulfilled" &&
+        Array.isArray(servicesRes.value.data)
+      ) {
         setServices(
           servicesRes.value.data.map((s: any) => ({
             id: s._id,
@@ -157,6 +162,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
             type: s.type,
             url: s.url,
             icon: s.icon,
+            description: s.description,
+            tags: s.tags,
             status: s.status,
             lastCheck: new Date(s.lastCheck).toLocaleTimeString(),
             responseTime: s.responseTime,
@@ -254,7 +261,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   // 3. Poll System Stats (5s)
   useEffect(() => {
     const fetchStats = () => {
-      fetch("/api/system")
+      fetch("/api/system/stats")
         .then((res) => res.json())
         .then((data) => setSystemStats(data))
         .catch((err) => console.error("Error polling system:", err));
@@ -338,12 +345,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await fetch("/api/services/scan", { method: "POST" });
       const data = await res.json();
 
+      if (!Array.isArray(data)) {
+        console.error("Scan returned non-array data:", data);
+        return;
+      }
+
       const mappedServices = data.map((s: any) => ({
         id: s._id,
         name: s.name,
         type: s.type,
         url: s.url,
         icon: s.icon,
+        description: s.description,
+        tags: s.tags,
         status: s.status,
         lastCheck: new Date(s.lastCheck).toLocaleTimeString(),
         responseTime: s.responseTime,

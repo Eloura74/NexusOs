@@ -51,6 +51,9 @@ const Dashboard: React.FC = () => {
     type: "OTHER",
     url: "http://",
     icon: "Box", // Default icon
+    apiKey: "",
+    description: "",
+    tags: "",
   });
 
   // Task Runner State
@@ -87,13 +90,26 @@ const Dashboard: React.FC = () => {
       type: newService.type,
       url: newService.url,
       icon: newService.icon,
+      apiKey: newService.apiKey,
+      description: newService.description,
+      tags: newService.tags
+        ? newService.tags.split(",").map((t) => t.trim())
+        : [],
       status: "UNKNOWN",
       lastCheck: "Jamais",
       responseTime: 0,
     } as any);
 
     setIsServiceModalOpen(false);
-    setNewService({ name: "", type: "OTHER", url: "http://", icon: "Box" });
+    setNewService({
+      name: "",
+      type: "OTHER",
+      url: "http://",
+      icon: "Box",
+      apiKey: "",
+      description: "",
+      tags: "",
+    });
   };
 
   return (
@@ -236,7 +252,7 @@ const Dashboard: React.FC = () => {
               <Activity className="w-4 h-4 mr-2 text-primary" />
               Charge Système (15m)
             </h3>
-            <div className="h-[200px] w-full min-w-[300px]">
+            <div className="h-[200px] w-full min-w-[300px] min-h-[200px]">
               {/* Attendre que les données soient chargées pour éviter le warning Recharts */}
               {systemStats ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -431,7 +447,7 @@ const Dashboard: React.FC = () => {
               >
                 <option value="OTHER">Autre</option>
                 <option value="HOME_ASSISTANT">Home Assistant</option>
-                <option value="PRINTER">Imprimante 3D</option>
+                <option value="KLIPPER">Imprimante 3D (Klipper)</option>
                 <option value="NAS">NAS / Stockage</option>
                 <option value="SERVER">Serveur / VM</option>
                 <option value="NETWORK">Réseau</option>
@@ -470,6 +486,53 @@ const Dashboard: React.FC = () => {
               }
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
               placeholder="http://192.168.1.x:8123"
+            />
+          </div>
+
+          {newService.type === "KLIPPER" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1">
+                API Key (Moonraker)
+              </label>
+              <input
+                type="password"
+                value={newService.apiKey}
+                onChange={(e) =>
+                  setNewService({ ...newService, apiKey: e.target.value })
+                }
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
+                placeholder="Optionnel si IP de confiance configurée"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              Description
+            </label>
+            <input
+              type="text"
+              value={newService.description}
+              onChange={(e) =>
+                setNewService({ ...newService, description: e.target.value })
+              }
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
+              placeholder="Courte description..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              Tags (séparés par virgule)
+            </label>
+            <input
+              type="text"
+              value={newService.tags}
+              onChange={(e) =>
+                setNewService({ ...newService, tags: e.target.value })
+              }
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
+              placeholder="ex: lab, prod, backup"
             />
           </div>
 

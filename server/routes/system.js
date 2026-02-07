@@ -3,9 +3,9 @@ import si from "systeminformation";
 
 const router = express.Router();
 
-// @route   GET /api/system
+// @route   GET /api/system/stats
 // @desc    Get real-time system stats (CPU, RAM, Docker, Printers)
-router.get("/", async (req, res) => {
+router.get("/stats", async (req, res) => {
   try {
     // Exécution parallèle des requêtes système pour la performance
     const [cpu, mem, os, docker, disk, network, printer] = await Promise.all([

@@ -25,6 +25,8 @@ router.post("/", async (req, res) => {
     type: req.body.type,
     url: req.body.url,
     icon: req.body.icon,
+    description: req.body.description,
+    tags: req.body.tags,
   });
 
   try {
@@ -52,6 +54,10 @@ router.put("/:id", async (req, res) => {
     service.type = req.body.type || service.type;
     service.url = req.body.url || service.url;
     service.icon = req.body.icon || service.icon;
+    service.description = req.body.description || service.description;
+    service.tags = req.body.tags || service.tags;
+
+    if (req.body.apiKey) service.apiKey = req.body.apiKey; // Allow updating API Key
 
     const updatedService = await service.save();
     res.json(updatedService);
