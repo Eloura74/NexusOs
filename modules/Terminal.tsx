@@ -5,6 +5,7 @@ import { WebLinksAddon } from "xterm-addon-web-links";
 import io, { Socket } from "socket.io-client";
 import "xterm/css/xterm.css";
 import { Terminal as TerminalIcon } from "lucide-react";
+import { useData } from "../context/DataContext";
 
 const Terminal: React.FC = () => {
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -36,10 +37,12 @@ const Terminal: React.FC = () => {
 
     // Fit needs DOM dimensions, wait for next frame
     requestAnimationFrame(() => {
-      try {
-        fitAddon.fit();
-      } catch (e) {
-        console.error("Fit error:", e);
+      if (terminalRef.current && terminalRef.current.offsetParent) {
+        try {
+          fitAddon.fit();
+        } catch (e) {
+          console.error("Fit error:", e);
+        }
       }
     });
 
@@ -93,17 +96,63 @@ const Terminal: React.FC = () => {
     };
   }, []);
 
+  // Command Management
+  const { commands } = useData();
+
   return (
-    <div className="h-full flex flex-col animate-fade-in relative">
-      <div className="absolute top-4 right-4 z-10 opacity-50 pointer-events-none">
-        <TerminalIcon className="w-12 h-12 text-slate-700" />
+    <div className="h-full flex animate-fade-in gap-4">
+      {/* Terminal Area */}
+      <div className="flex-1 flex flex-col relative">
+        <div className="absolute top-4 right-4 z-10 opacity-50 pointer-events-none">
+          <TerminalIcon className="w-12 h-12 text-slate-700" />
+        </div>
+        <div className="flex-1 bg-slate-900 rounded-xl overflow-hidden border border-slate-700 shadow-2xl p-2 relative">
+          <div
+            ref={terminalRef}
+            className="w-full h-full"
+            style={{ minHeight: "600px" }}
+          />
+        </div>
       </div>
-      <div className="flex-1 bg-slate-900 rounded-xl overflow-hidden border border-slate-700 shadow-2xl p-2 relative">
-        <div
-          ref={terminalRef}
-          className="w-full h-full"
-          style={{ minHeight: "600px" }} // Force height
-        />
+
+      {/* Sidebar Snippets */}
+      <div className="w-64 bg-surface border border-surface-highlight rounded-xl p-4 flex flex-col">
+        <h3 className="text-sm font-bold text-slate-300 mb-4 uppercase tracking-wider">
+          Snippets
+        </h3>
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          {commands
+            .filter((c) => c.type === "terminal")
+            .map((cmd) => (
+              <button
+                key={cmd._id}
+                onClick={() => {
+                  console.log("Sending command:", cmd.command);
+                  if (socketRef.current) {
+                    socketRef.current.emit("input", cmd.command + "\r");
+                    termRef.current?.focus();
+                  } else {
+                    console.error("Socket not connected");
+                  }
+                }}
+                className="w-full text-left p-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 hover:border-slate-500 transition-all group"
+              >
+                <div className="font-bold text-slate-300 text-xs mb-1 group-hover:text-white">
+                  {cmd.label}
+                </div>
+                <div className="font-mono text-[10px] text-slate-500 truncate">
+                  {cmd.command}
+                </div>
+              </button>
+            ))}
+          {commands.filter((c) => c.type === "terminal").length === 0 && (
+            <div className="text-center text-xs text-slate-600 py-8 italic">
+              Aucun snippet.
+              <br />
+              Ajoutez-en via le Dashboard.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

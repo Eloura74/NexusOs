@@ -17,6 +17,7 @@ import {
   ArrowRight,
   Box,
   Plus,
+  X,
 } from "lucide-react";
 import TaskRunnerModal from "../components/TaskRunnerModal";
 import {
@@ -55,6 +56,15 @@ const Dashboard: React.FC = () => {
   // Task Runner State
   const [isRunnerOpen, setIsRunnerOpen] = useState(false);
   const [currentTask, setCurrentTask] = useState({ command: "", title: "" });
+
+  // Command Management State
+  const [isCommandModalOpen, setIsCommandModalOpen] = useState(false);
+  const [newCommand, setNewCommand] = useState<{
+    label: string;
+    command: string;
+    type?: string;
+  }>({ label: "", command: "", type: "dashboard" }); // Default type dashboard
+  const { commands, addCommand, deleteCommand } = useData();
 
   const runTask = (title: string, command: string) => {
     setCurrentTask({ title, command });
@@ -276,60 +286,54 @@ const Dashboard: React.FC = () => {
 
           {/* Quick Actions */}
           <div className="bg-surface border border-surface-highlight rounded-xl p-5 shadow-lg">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center">
-              <Terminal className="w-5 h-5 mr-2 text-primary" />
-              Actions Rapides
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center">
+                <Terminal className="w-5 h-5 mr-2 text-primary" />
+                Actions Rapides
+              </h3>
               <button
-                onClick={() => runTask("Git Pull", "git pull")}
-                className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all group border border-slate-700 hover:border-primary/50"
+                onClick={() => setIsCommandModalOpen(true)}
+                className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition-colors"
+                title="Ajouter une commande"
               >
-                <Github className="w-6 h-6 text-white mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-slate-300">
-                  Git Pull
-                </span>
-              </button>
-
-              <button
-                onClick={() => runTask("NPM Install", "npm install")}
-                className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all group border border-slate-700 hover:border-red-500/50"
-              >
-                <HardDrive className="w-6 h-6 text-red-400 mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-slate-300">
-                  NPM Install
-                </span>
-              </button>
-
-              <button
-                onClick={() =>
-                  runTask(
-                    "Nettoyage Logs",
-                    "echo 'Cleaning logs...' && timeout 2",
-                  )
-                }
-                className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all group border border-slate-700 hover:border-amber-500/50"
-              >
-                <Trash2 className="w-6 h-6 text-amber-400 mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-slate-300">
-                  Clean Logs
-                </span>
-              </button>
-
-              <button
-                onClick={() =>
-                  runTask("Restart Server", "echo 'Restarting...' && timeout 2")
-                }
-                className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all group border border-slate-700 hover:border-green-500/50"
-              >
-                <RefreshCw className="w-6 h-6 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-slate-300">
-                  Restart
-                </span>
+                <Plus className="w-4 h-4" />
               </button>
             </div>
-          </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              {commands
+                .filter((c) => c.type === "dashboard")
+                .map((cmd) => (
+                  <div key={cmd._id} className="relative group">
+                    <button
+                      onClick={() => runTask(cmd.label, cmd.command)}
+                      className="w-full p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all border border-slate-700 hover:border-primary/50"
+                    >
+                      <Terminal className="w-6 h-6 text-white mb-2 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-300">
+                        {cmd.label}
+                      </span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm("Supprimer cette commande ?"))
+                          deleteCommand(cmd._id);
+                      }}
+                      className="absolute top-1 right-1 p-1 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 hover:scale-100"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+
+              {commands.filter((c) => c.type === "dashboard").length === 0 && (
+                <div className="col-span-2 text-center text-xs text-slate-500 py-4 border border-dashed border-slate-700 rounded-xl">
+                  Aucune action configurée.
+                </div>
+              )}
+            </div>
+          </div>
           {/* Logs Rapides */}
           <div className="bg-surface border border-surface-highlight rounded-xl overflow-hidden shadow-lg">
             <div className="p-4 border-b border-surface-highlight flex justify-between items-center bg-slate-900/50">
@@ -469,6 +473,73 @@ const Dashboard: React.FC = () => {
             className="w-full btn-primary justify-center mt-6"
           >
             Ajouter
+          </button>
+        </div>
+      </Modal>
+
+      {/* Command Modal */}
+      <Modal
+        isOpen={isCommandModalOpen}
+        onClose={() => setIsCommandModalOpen(false)}
+        title="Ajouter une Action Rapide"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              Nom (Label)
+            </label>
+            <input
+              type="text"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
+              placeholder="Ex: Mise à jour Git"
+              value={newCommand.label}
+              onChange={(e) =>
+                setNewCommand({ ...newCommand, label: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              Commande (Shell)
+            </label>
+            <input
+              type="text"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-xs focus:border-primary focus:outline-none"
+              placeholder="Ex: git pull && npm install"
+              value={newCommand.command}
+              onChange={(e) =>
+                setNewCommand({ ...newCommand, command: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              Afficher dans
+            </label>
+            <select
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-primary focus:outline-none"
+              value={newCommand.type || "dashboard"}
+              onChange={(e) =>
+                setNewCommand({ ...newCommand, type: e.target.value as any })
+              }
+            >
+              <option value="dashboard">Dashboard (Bouton)</option>
+              <option value="terminal">Terminal Web (Snippet)</option>
+            </select>
+          </div>
+          <button
+            onClick={() => {
+              addCommand({
+                ...newCommand,
+                type: (newCommand.type as any) || "dashboard",
+                icon: "Terminal",
+              });
+              setIsCommandModalOpen(false);
+              setNewCommand({ label: "", command: "" });
+            }}
+            className="w-full btn-primary justify-center mt-4"
+          >
+            Créer l'action
           </button>
         </div>
       </Modal>

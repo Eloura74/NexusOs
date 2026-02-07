@@ -10,6 +10,7 @@ import aiRoutes from "./routes/ai.js";
 import logsRoutes from "./routes/logs.js";
 import docsRoutes from "./routes/docs.js";
 import settingsRoutes from "./routes/settings.js";
+import commandsRoutes from "./routes/commands.js";
 
 // ... imports
 
@@ -61,6 +62,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/logs", logsRoutes);
 app.use("/api/docs", docsRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/commands", commandsRoutes);
 
 // Health Check
 app.get("/api/health", (req, res) => {

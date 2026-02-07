@@ -25,6 +25,14 @@ export interface Project {
   language?: string;
 }
 
+export interface Command {
+  _id: string;
+  label: string;
+  command: string;
+  type: "dashboard" | "terminal";
+  icon: string;
+}
+
 export interface DocEntry {
   id: string;
   title: string;

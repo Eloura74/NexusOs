@@ -5,7 +5,15 @@ import React, {
   useEffect,
   useRef,
 } from "react";
-import { Service, Project, DocEntry, LogEntry, SystemStats } from "../types";
+import axios from "axios";
+import {
+  SystemStats,
+  Service,
+  Project,
+  DocEntry,
+  LogEntry,
+  Command,
+} from "../types";
 import { MOCK_DOCS, MOCK_LOGS } from "../constants";
 import { useNotification } from "./NotificationContext";
 
@@ -14,6 +22,7 @@ interface DataContextType {
   projects: Project[];
   docs: DocEntry[];
   logs: LogEntry[];
+  commands: Command[];
   systemStats: SystemStats | null;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -51,7 +60,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [services, setServices] = useState<Service[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [docs, setDocs] = useState<DocEntry[]>(MOCK_DOCS);
-  const [logs, setLogs] = useState<LogEntry[]>(MOCK_LOGS);
+  const [logs, setLogs] = useState<LogEntry[]>([]); // Changed to empty array, MOCK_LOGS removed
+  const [commands, setCommands] = useState<Command[]>([]); // Added commands state
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -116,26 +126,74 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // 2. Fetch Services
-  const fetchServices = () => {
-    fetch("/api/services")
-      .then((res) => res.json())
-      .then((data) => {
-        const mappedServices = data.map((s: any) => ({
-          id: s._id,
-          name: s.name,
-          type: s.type,
-          url: s.url,
-          icon: s.icon,
-          status: s.status,
-          lastCheck: new Date(s.lastCheck).toLocaleTimeString(),
-          responseTime: s.responseTime,
-        }));
-        setServices(mappedServices);
-      })
-      .catch((err) => console.error("Error fetching services:", err));
+  // This function is refactored to be a general data fetcher based on the provided snippet
+  const fetchData = async () => {
+    try {
+      const results = await Promise.allSettled([
+        axios.get("http://localhost:5000/api/system/stats"),
+        axios.get("http://localhost:5000/api/services"),
+        axios.get("http://localhost:5000/api/projects"),
+        axios.get("http://localhost:5000/api/logs"),
+        axios.get("http://localhost:5000/api/settings"),
+        axios.get("http://localhost:5000/api/commands"),
+      ]);
+
+      const [
+        statsRes,
+        servicesRes,
+        projectsRes,
+        logsRes,
+        settingsRes,
+        commandsRes,
+      ] = results;
+
+      if (statsRes.status === "fulfilled") setSystemStats(statsRes.value.data);
+
+      if (servicesRes.status === "fulfilled") {
+        setServices(
+          servicesRes.value.data.map((s: any) => ({
+            id: s._id,
+            name: s.name,
+            type: s.type,
+            url: s.url,
+            icon: s.icon,
+            status: s.status,
+            lastCheck: new Date(s.lastCheck).toLocaleTimeString(),
+            responseTime: s.responseTime,
+          })),
+        );
+      }
+
+      if (projectsRes.status === "fulfilled") {
+        setProjects(
+          projectsRes.value.data.map((p: any) => ({
+            id: p._id,
+            name: p.name,
+            description: p.description,
+            status: p.status,
+            progress: p.progress,
+            tags: p.tags,
+            repoUrl: p.repoUrl,
+            lastUpdate: new Date(p.lastUpdate).toLocaleDateString(),
+            stars: p.stars,
+            forks: p.forks,
+            language: p.language,
+          })),
+        );
+      }
+
+      if (logsRes.status === "fulfilled") setLogs(logsRes.value.data);
+      if (settingsRes.status === "fulfilled" && settingsRes.value.data)
+        setSettings(settingsRes.value.data);
+      if (commandsRes.status === "fulfilled")
+        setCommands(commandsRes.value.data);
+    } catch (err) {
+      console.error("Error fetching initial data (Global Catch):", err); // Should rarely happen with allSettled
+    }
   };
 
-  // 4. Fetch Logs
+  // 4. Fetch Logs (This function is now redundant if fetchData is used for initial load)
+  // Keeping it for potential future specific log fetching, but initial load is via fetchData
   const fetchLogs = () => {
     fetch("/api/logs")
       .then((res) => res.json())
@@ -185,11 +243,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   useEffect(() => {
-    fetchProjects();
-    fetchServices();
-    fetchLogs();
-    fetchDocs();
-    fetchSettings();
+    fetchData(); // Use the new combined fetch function
+    fetchDocs(); // Docs are not included in the new fetchData, so keep this
+    // fetchProjects(); // Redundant
+    // fetchServices(); // Redundant
+    // fetchLogs(); // Redundant
+    // fetchSettings(); // Redundant
   }, []);
 
   // 3. Poll System Stats (5s)
@@ -448,6 +507,37 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       .catch((err) => console.error("Failed to save log", err));
   };
 
+  // Command Actions
+  const addCommand = async (cmd: Omit<Command, "_id">) => {
+    try {
+      const res = await axios.post("http://localhost:5000/api/commands", cmd);
+      setCommands((prev) => [res.data, ...prev]);
+      showNotification("success", "Commande", "Commande ajoutée.");
+      return true;
+    } catch (error) {
+      console.error("Error adding command:", error);
+      showNotification("error", "Erreur", "Impossible d'ajouter la commande.");
+      return false;
+    }
+  };
+
+  const deleteCommand = async (id: string) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/commands/${id}`);
+      setCommands((prev) => prev.filter((c) => c._id !== id));
+      showNotification("info", "Commande", "Commande supprimée.");
+      return true;
+    } catch (error) {
+      console.error("Error deleting command:", error);
+      showNotification(
+        "error",
+        "Erreur",
+        "Impossible de supprimer la commande.",
+      );
+      return false;
+    }
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -455,6 +545,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         projects,
         docs,
         logs,
+        commands, // Added commands to context value
         systemStats,
         searchQuery,
         setSearchQuery,
@@ -470,6 +561,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         deleteDoc,
         settings,
         updateSettings,
+        addCommand,
+        deleteCommand,
       }}
     >
       {children}
