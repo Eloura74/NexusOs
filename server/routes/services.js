@@ -2,6 +2,8 @@ import express from "express";
 import Service from "../models/Service.js";
 import axios from "axios";
 
+import Log from "../models/Log.js";
+
 const router = express.Router();
 
 // @route   GET /api/services
@@ -27,7 +29,32 @@ router.post("/", async (req, res) => {
 
   try {
     const newService = await service.save();
+    // Log creation
+    await new Log({
+      level: "SUCCESS",
+      message: `Service ajouté : ${newService.name}`,
+      source: "SYSTEM",
+    }).save();
     res.status(201).json(newService);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// @route   PUT /api/services/:id
+// @desc    Update a service
+router.put("/:id", async (req, res) => {
+  try {
+    const service = await Service.findById(req.params.id);
+    if (!service) return res.status(404).json({ message: "Service not found" });
+
+    service.name = req.body.name || service.name;
+    service.type = req.body.type || service.type;
+    service.url = req.body.url || service.url;
+    service.icon = req.body.icon || service.icon;
+
+    const updatedService = await service.save();
+    res.json(updatedService);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -41,14 +68,29 @@ router.post("/scan", async (req, res) => {
 
     const updates = services.map(async (service) => {
       const start = Date.now();
+      const oldStatus = service.status;
+      let newStatus = "UNKNOWN";
+
       try {
         await axios.get(service.url, { timeout: 2000 });
-        service.status = "ONLINE";
+        newStatus = "ONLINE";
         service.responseTime = Date.now() - start;
       } catch (error) {
-        service.status = "OFFLINE";
+        newStatus = "OFFLINE";
         service.responseTime = 0;
       }
+
+      // Log only if status changed
+      if (oldStatus !== newStatus && oldStatus !== "UNKNOWN") {
+        const uniqueLogId = `${service.name}-${newStatus}-${Date.now()}`; // Dedup simplistic
+        await new Log({
+          level: newStatus === "ONLINE" ? "SUCCESS" : "ERROR",
+          message: `Service ${service.name} est maintenant ${newStatus}`,
+          source: "MONITOR",
+        }).save();
+      }
+
+      service.status = newStatus;
       service.lastCheck = Date.now();
       return service.save();
     });

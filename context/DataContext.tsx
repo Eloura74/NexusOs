@@ -333,14 +333,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const checkServices = async () => {
     try {
-      addLog({
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-        level: "INFO",
-        message: "Lancement du scan des services...",
-        source: "System",
-      });
-
+      // The backend now handles logging for status changes inside /api/services/scan
+      // We just trigger the scan and update the local state
       const res = await fetch("/api/services/scan", { method: "POST" });
       const data = await res.json();
 
@@ -355,42 +349,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         responseTime: s.responseTime,
       }));
 
-      // Check for status changes
+      // Check for status changes for Notifications (Frontend side)
       mappedServices.forEach((newSvc: Service) => {
         const oldSvc = prevServicesRef.current.find((s) => s.id === newSvc.id);
-        if (oldSvc && oldSvc.status !== newSvc.status) {
-          // Status Changed Notification
+        if (
+          oldSvc &&
+          oldSvc.status !== newSvc.status &&
+          oldSvc.status !== "UNKNOWN"
+        ) {
           const isUp = newSvc.status === "ONLINE";
-
-          // Specific rule for Home Assistant & Critical infra
-          if (
-            ["HOME_ASSISTANT", "PRINTER", "NAS", "SERVER"].includes(newSvc.type)
-          ) {
-            showNotification(
-              isUp ? "success" : "error",
-              `État Service : ${newSvc.name}`,
-              `${newSvc.name} est maintenant ${newSvc.status} (${newSvc.responseTime || 0}ms)`,
-            );
-          }
+          showNotification(
+            isUp ? "success" : "error",
+            `État Service : ${newSvc.name}`,
+            `${newSvc.name} est maintenant ${newSvc.status} (${newSvc.responseTime || 0}ms)`,
+          );
         }
       });
 
       prevServicesRef.current = mappedServices;
       setServices(mappedServices);
 
-      addLog({
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        timestamp: new Date().toLocaleTimeString(),
-        level: "SUCCESS",
-        message: "Scan des services terminé.",
-        source: "System",
-      });
-
-      showNotification(
-        "success",
-        "Scan Terminé",
-        "Tous les services ont été écourtés.",
-      );
+      // Refresh logs as the scan might have created new ones
+      const logsRes = await axios.get("http://localhost:5000/api/logs");
+      setLogs(logsRes.data);
     } catch (error) {
       console.error("Scan failed", error);
       showNotification(
@@ -400,6 +381,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       );
     }
   };
+
+  // Poll Services & Logs every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkServices();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const syncGitHub = async () => {
     try {

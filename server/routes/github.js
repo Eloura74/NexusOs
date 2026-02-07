@@ -109,23 +109,60 @@ router.post("/sync", async (req, res) => {
   }
 });
 
-// @route   GET /api/github/repos
-// @desc    Get raw user repositories from GitHub (Legacy/Direct View)
-router.get("/repos", async (req, res) => {
-  // ... existing logic if needed, or deprecate
-  // Keeping it simple for now, just redirecting to sync logic conceptually or similar
-  // For now let's just keep the original fetch logic just in case the UI uses it directly somewhere else
-  // But the main goal was Sync.
-  // I will leave this endpoint as a simple proxy for now.
+// @route   GET /api/github/content/:owner/:repo
+// @desc    Get Readme and Commits for a specific repo
+router.get("/content/:owner/:repo", async (req, res) => {
+  const { owner, repo } = req.params;
   const token = process.env.GITHUB_TOKEN;
+
+  if (!token) {
+    return res.status(500).json({ message: "GITHUB_TOKEN missing" });
+  }
+
   try {
-    const response = await axios.get(
-      "https://api.github.com/user/repos?sort=pushed&per_page=100&direction=desc",
-      { headers: { Authorization: `token ${token}` } },
-    );
-    res.json(response.data);
+    const headers = {
+      Authorization: `token ${token}`,
+      Accept: "application/vnd.github.v3+json",
+    };
+
+    const [readmeRes, commitsRes] = await Promise.allSettled([
+      axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
+        headers,
+      }),
+      axios.get(
+        `https://api.github.com/repos/${owner}/${repo}/commits?per_page=10`,
+        {
+          headers,
+        },
+      ),
+    ]);
+
+    let readme = null;
+    let commits = [];
+
+    if (readmeRes.status === "fulfilled") {
+      // GitHub returns Base64 encoded content
+      const content = Buffer.from(
+        readmeRes.value.data.content,
+        "base64",
+      ).toString("utf-8");
+      readme = content;
+    }
+
+    if (commitsRes.status === "fulfilled") {
+      commits = commitsRes.value.data.map((commit) => ({
+        sha: commit.sha,
+        message: commit.commit.message,
+        author: commit.commit.author.name,
+        date: commit.commit.author.date,
+        url: commit.html_url,
+      }));
+    }
+
+    res.json({ readme, commits });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("GitHub Content Error:", err.message);
+    res.status(500).json({ message: "Failed to fetch GitHub content" });
   }
 });
 

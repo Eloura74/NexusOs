@@ -1,21 +1,7 @@
 import express from "express";
-import mongoose from "mongoose";
+import Log from "../models/Log.js";
 
 const router = express.Router();
-
-// Schema definition (can be moved to models/Log.js)
-const LogSchema = new mongoose.Schema({
-  timestamp: { type: Date, default: Date.now },
-  level: {
-    type: String,
-    enum: ["INFO", "SUCCESS", "WARN", "ERROR"],
-    required: true,
-  },
-  message: { type: String, required: true },
-  source: { type: String, required: true },
-});
-
-const Log = mongoose.model("Log", LogSchema);
 
 // @route   GET /api/logs
 // @desc    Get recent logs

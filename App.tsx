@@ -9,6 +9,7 @@ import {
 import Layout from "./components/Layout";
 import Dashboard from "./modules/Dashboard";
 import Projects from "./modules/Projects";
+import ProjectDetails from "./modules/ProjectDetails";
 import Documentation from "./modules/Documentation";
 import SettingsModule from "./modules/Settings";
 import TerminalModule from "./modules/Terminal";
@@ -64,6 +65,7 @@ const AppContent: React.FC = () => {
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/projects" element={<Projects />} />
+      <Route path="/projects/:id" element={<ProjectDetails />} />
       <Route path="/docs" element={<Documentation />} />
       <Route path="/terminal" element={<TerminalModule />} />
       <Route path="/settings" element={<SettingsModule />} />
@@ -106,6 +108,12 @@ const App: React.FC = () => {
                   icon={<LayoutDashboard />}
                   label="Dashboard"
                   active={location.pathname === "/"}
+                />
+                <NavLink
+                  to="/projects"
+                  icon={<ListTodo />}
+                  label="Projets"
+                  active={location.pathname.startsWith("/projects")}
                 />
                 <NavLink
                   to="/terminal"
