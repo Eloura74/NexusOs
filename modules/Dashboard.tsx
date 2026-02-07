@@ -101,12 +101,12 @@ const Dashboard: React.FC = () => {
       {/* Statistiques d'en-tête (Données Réelles) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Services Totaux / OS Info */}
-        <div className="bg-surface border border-surface-highlight rounded-xl p-4 flex items-center space-x-4 shadow-sm hover:border-primary/30 transition-colors">
-          <div className="p-3 bg-blue-500/10 text-blue-500 rounded-lg">
+        <div className="glass-panel p-4 flex items-center space-x-4 hover:border-blue-500/30 transition-colors group">
+          <div className="p-3 bg-blue-500/10 text-blue-500 rounded-lg group-hover:bg-blue-500/20 transition-colors">
             <Server className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xl font-mono font-bold text-white truncate max-w-[150px]">
+            <div className="text-xl font-mono font-bold text-white truncate max-w-[150px] text-glow">
               {systemStats?.os.hostname || "Loading..."}
             </div>
             <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">
@@ -116,12 +116,12 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* RAM Usage */}
-        <div className="bg-surface border border-surface-highlight rounded-xl p-4 flex items-center space-x-4 shadow-sm hover:border-purple-500/30 transition-colors">
-          <div className="p-3 bg-purple-500/10 text-purple-500 rounded-lg">
+        <div className="glass-panel p-4 flex items-center space-x-4 hover:border-purple-500/30 transition-colors group">
+          <div className="p-3 bg-purple-500/10 text-purple-500 rounded-lg group-hover:bg-purple-500/20 transition-colors">
             <HardDrive className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-mono font-bold text-white">
+            <div className="text-2xl font-mono font-bold text-white text-glow">
               {systemStats ? `${systemStats.memory.percent}%` : "--%"}
             </div>
             <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">
@@ -135,12 +135,12 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* CPU Usage */}
-        <div className="bg-surface border border-surface-highlight rounded-xl p-4 flex items-center space-x-4 shadow-sm hover:border-green-500/30 transition-colors">
-          <div className="p-3 bg-green-500/10 text-green-500 rounded-lg">
+        <div className="glass-panel p-4 flex items-center space-x-4 hover:border-green-500/30 transition-colors group">
+          <div className="p-3 bg-green-500/10 text-green-500 rounded-lg group-hover:bg-green-500/20 transition-colors">
             <Activity className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-mono font-bold text-white">
+            <div className="text-2xl font-mono font-bold text-white text-glow">
               {systemStats ? `${systemStats.cpu.load}%` : "--%"}
             </div>
             <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">
@@ -150,12 +150,12 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Docker Containers */}
-        <div className="bg-surface border border-surface-highlight rounded-xl p-4 flex items-center space-x-4 shadow-sm hover:border-orange-500/30 transition-colors">
-          <div className="p-3 bg-orange-500/10 text-orange-500 rounded-lg">
+        <div className="glass-panel p-4 flex items-center space-x-4 hover:border-orange-500/30 transition-colors group">
+          <div className="p-3 bg-orange-500/10 text-orange-500 rounded-lg group-hover:bg-orange-500/20 transition-colors">
             <Box className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-mono font-bold text-white">
+            <div className="text-2xl font-mono font-bold text-white text-glow">
               {systemStats ? systemStats.docker.count : 0}
             </div>
             <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">
@@ -231,7 +231,7 @@ const Dashboard: React.FC = () => {
         {/* Colonne Droite : Widgets */}
         <div className="space-y-6">
           {/* Graphique de Charge Système */}
-          <div className="bg-surface border border-surface-highlight rounded-xl p-5 shadow-lg">
+          <div className="glass-panel p-5 shadow-lg">
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
               <Activity className="w-4 h-4 mr-2 text-primary" />
               Charge Système (15m)
@@ -255,14 +255,18 @@ const Dashboard: React.FC = () => {
                         />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(255,255,255,0.05)"
+                    />
                     <XAxis dataKey="time" hide />
                     <YAxis hide domain={[0, 100]} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#0f172a",
-                        border: "1px solid #1e293b",
-                        borderRadius: "8px",
+                        backgroundColor: "rgba(15, 23, 42, 0.8)",
+                        borderColor: "rgba(255,255,255,0.1)",
+                        borderRadius: "12px",
+                        backdropFilter: "blur(4px)",
                       }}
                       itemStyle={{ color: "#e2e8f0" }}
                     />
@@ -270,7 +274,8 @@ const Dashboard: React.FC = () => {
                       type="monotone"
                       dataKey="load"
                       stroke="#3B82F6"
-                      strokeWidth={2}
+                      strokeWidth={3}
+                      dot={false}
                       fillOpacity={1}
                       fill="url(#colorCpu)"
                     />
@@ -285,32 +290,33 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-surface border border-surface-highlight rounded-xl p-5 shadow-lg">
-            <div className="flex justify-between items-center mb-4">
+          <div className="glass-panel p-5 shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl rounded-full -mr-10 -mt-10 pointer-events-none"></div>
+            <div className="flex justify-between items-center mb-4 relative z-10">
               <h3 className="text-lg font-bold text-white flex items-center">
                 <Terminal className="w-5 h-5 mr-2 text-primary" />
                 Actions Rapides
               </h3>
               <button
                 onClick={() => setIsCommandModalOpen(true)}
-                className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition-colors"
+                className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-all hover:scale-105"
                 title="Ajouter une commande"
               >
                 <Plus className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 relative z-10">
               {commands
                 .filter((c) => c.type === "dashboard")
                 .map((cmd) => (
                   <div key={cmd._id} className="relative group">
                     <button
                       onClick={() => runTask(cmd.label, cmd.command)}
-                      className="w-full p-3 bg-slate-800 hover:bg-slate-700 rounded-xl flex flex-col items-center justify-center transition-all border border-slate-700 hover:border-primary/50"
+                      className="w-full p-3 bg-white/5 hover:bg-white/10 rounded-xl flex flex-col items-center justify-center transition-all border border-white/5 hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/10"
                     >
-                      <Terminal className="w-6 h-6 text-white mb-2 group-hover:scale-110 transition-transform" />
-                      <span className="text-xs font-bold text-slate-300">
+                      <Terminal className="w-6 h-6 text-slate-300 mb-2 group-hover:scale-110 group-hover:text-primary transition-all duration-300" />
+                      <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">
                         {cmd.label}
                       </span>
                     </button>
@@ -328,61 +334,60 @@ const Dashboard: React.FC = () => {
                 ))}
 
               {commands.filter((c) => c.type === "dashboard").length === 0 && (
-                <div className="col-span-2 text-center text-xs text-slate-500 py-4 border border-dashed border-slate-700 rounded-xl">
+                <div className="col-span-2 text-center text-xs text-slate-500 py-6 border border-dashed border-slate-700/50 rounded-xl">
                   Aucune action configurée.
                 </div>
               )}
             </div>
           </div>
           {/* Logs Rapides */}
-          <div className="bg-surface border border-surface-highlight rounded-xl overflow-hidden shadow-lg">
-            <div className="p-4 border-b border-surface-highlight flex justify-between items-center bg-slate-900/50">
+          <div className="glass-panel overflow-hidden shadow-lg">
+            <div className="p-4 border-b border-white/5 flex justify-between items-center bg-slate-900/40">
               <h3 className="text-slate-100 font-medium text-sm">
                 Activité Récente
               </h3>
-              <span className="text-[10px] text-green-500 font-mono bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">
-                LIVE
-              </span>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-[10px] text-green-400 font-mono opacity-80">
+                  LIVE
+                </span>
+              </div>
             </div>
-            <div className="divide-y divide-slate-800">
+            <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto custom-scrollbar">
               {logs.slice(0, 5).map((log, index) => (
                 <div
                   key={log.id || index}
-                  className="p-3 text-sm hover:bg-slate-800/50 transition-colors group cursor-default"
+                  className="p-3 text-sm hover:bg-white/5 transition-colors group cursor-default"
                 >
                   <div className="flex justify-between items-center mb-1">
                     <span
                       className={`
-                      text-[10px] font-bold px-1.5 py-0.5 rounded border
+                      text-[10px] font-bold px-1.5 py-0.5 rounded border backdrop-blur-sm
                       ${
                         log.level === "ERROR"
-                          ? "bg-red-500/10 text-red-400 border-red-500/20"
+                          ? "bg-red-500/20 text-red-300 border-red-500/30"
                           : log.level === "WARN"
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
                             : log.level === "SUCCESS"
-                              ? "bg-green-500/10 text-green-400 border-green-500/20"
-                              : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                              ? "bg-green-500/20 text-green-300 border-green-500/30"
+                              : "bg-blue-500/20 text-blue-300 border-blue-500/30"
                       }
                     `}
                     >
                       {log.level}
                     </span>
-                    <span className="text-[10px] text-slate-600 group-hover:text-slate-400 font-mono transition-colors">
+                    <span className="text-[10px] text-slate-500 group-hover:text-slate-400 font-mono transition-colors">
                       {log.timestamp}
                     </span>
                   </div>
                   <p className="text-slate-300 text-xs leading-relaxed truncate group-hover:whitespace-normal transition-all">
                     {log.message}
                   </p>
-                  <p className="text-slate-500 text-[10px] mt-1 font-mono flex items-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-700 mr-1.5"></span>
-                    {log.source}
-                  </p>
                 </div>
               ))}
             </div>
-            <div className="p-2 bg-slate-900/50 text-center border-t border-surface-highlight">
-              <button className="text-xs text-slate-500 hover:text-primary transition-colors flex items-center justify-center w-full py-1">
+            <div className="p-2 bg-slate-900/40 text-center border-t border-white/5 hover:bg-white/5 transition-colors cursor-pointer">
+              <button className="text-xs text-slate-400 hover:text-white transition-colors flex items-center justify-center w-full py-1">
                 Voir Journal Système <ArrowRight className="w-3 h-3 ml-1" />
               </button>
             </div>

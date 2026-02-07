@@ -38,8 +38,8 @@ const Settings: React.FC = () => {
         </div>
       </div>
 
-      <div className="card-surface space-y-6">
-        <h2 className="text-lg font-bold text-white border-b border-surface-highlight pb-4">
+      <div className="glass-panel p-6 space-y-6">
+        <h2 className="text-lg font-bold text-white border-b border-white/5 pb-4">
           Général
         </h2>
 
@@ -54,7 +54,7 @@ const Settings: React.FC = () => {
               onChange={(e) =>
                 setFormData({ ...formData, serverName: e.target.value })
               }
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none"
+              className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none focus:bg-slate-900/80 transition-all"
             />
           </div>
 
@@ -68,7 +68,7 @@ const Settings: React.FC = () => {
               onChange={(e) =>
                 setFormData({ ...formData, dashboardUrl: e.target.value })
               }
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none"
+              className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none focus:bg-slate-900/80 transition-all"
             />
           </div>
 
@@ -82,7 +82,7 @@ const Settings: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, theme: e.target.value })
                 }
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none focus:bg-slate-900/80 transition-all"
               >
                 <option value="dark">Sombre</option>
                 <option value="light">Clair (WIP)</option>
@@ -98,7 +98,7 @@ const Settings: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, language: e.target.value })
                 }
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-primary/50 focus:outline-none focus:bg-slate-900/80 transition-all"
               >
                 <option value="fr">Français</option>
                 <option value="en">English</option>

@@ -23,7 +23,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
   const statusColor = getStatusColor(service.status);
 
   return (
-    <div className="bg-surface border border-surface-highlight rounded-xl p-5 hover:border-slate-500 transition-all duration-200 group relative overflow-hidden">
+    <div className="glass-panel p-5 hover:border-blue-500/30 transition-all duration-300 group relative overflow-hidden">
       {/* Background Glow Effect based on status */}
       {service.status === "OFFLINE" && (
         <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10 rounded-full translate-x-1/2 -translate-y-1/2"></div>

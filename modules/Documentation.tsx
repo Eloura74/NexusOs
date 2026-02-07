@@ -125,7 +125,7 @@ const Documentation: React.FC = () => {
       {/* Sidebar List */}
       <div className="w-1/3 min-w-[300px] flex flex-col gap-4">
         {/* Header Actions */}
-        <div className="flex justify-between items-center bg-surface border border-surface-highlight p-4 rounded-xl">
+        <div className="flex justify-between items-center glass-panel p-4 rounded-xl">
           <div className="relative flex-1 mr-4">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -133,12 +133,12 @@ const Documentation: React.FC = () => {
               placeholder="Rechercher..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:border-primary focus:outline-none"
+              className="w-full bg-slate-900/50 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:border-primary focus:outline-none focus:bg-slate-900/80 transition-all"
             />
           </div>
           <button
             onClick={handleCreate}
-            className="btn-primary p-2 rounded-lg"
+            className="btn-primary p-2 rounded-lg hover:scale-105 transition-transform"
             title="Nouveau Document"
           >
             <Plus className="w-5 h-5" />
@@ -146,7 +146,7 @@ const Documentation: React.FC = () => {
         </div>
 
         {/* Doc List */}
-        <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+        <div className="glass-panel flex-1 overflow-y-auto space-y-3 p-3 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
           {isLoading ? (
             <p className="text-center text-slate-500 mt-10">Chargement...</p>
           ) : filteredDocs.length === 0 ? (
@@ -161,8 +161,8 @@ const Documentation: React.FC = () => {
                 onClick={() => handleSelect(doc)}
                 className={`p-4 rounded-xl border cursor-pointer transition-all group ${
                   selectedDoc?._id === doc._id
-                    ? "bg-primary/10 border-primary/50"
-                    : "bg-surface border-surface-highlight hover:border-primary/30"
+                    ? "bg-primary/20 border-primary/50 shadow-lg shadow-primary/10"
+                    : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10"
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -170,17 +170,17 @@ const Documentation: React.FC = () => {
                     className={`font-bold truncate ${
                       selectedDoc?._id === doc._id
                         ? "text-primary-light"
-                        : "text-white group-hover:text-primary-light"
+                        : "text-slate-200 group-hover:text-white"
                     }`}
                   >
                     {doc.title}
                   </h3>
                   {selectedDoc?._id === doc._id && (
-                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
                   )}
                 </div>
                 <div className="flex justify-between items-center text-xs text-slate-500">
-                  <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-400 border border-slate-700">
+                  <span className="bg-slate-900/50 px-2 py-0.5 rounded text-slate-400 border border-white/5">
                     {doc.category}
                   </span>
                   <span>{new Date(doc.updatedAt).toLocaleDateString()}</span>
@@ -192,7 +192,7 @@ const Documentation: React.FC = () => {
       </div>
 
       {/* Main Editor/Viewer */}
-      <div className="flex-1 bg-surface border border-surface-highlight rounded-xl overflow-hidden flex flex-col shadow-xl">
+      <div className="glass-panel flex-1 rounded-xl overflow-hidden flex flex-col shadow-2xl">
         {selectedDoc || isEditing ? (
           <>
             {/* Toolbar */}
